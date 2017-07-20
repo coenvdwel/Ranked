@@ -35,9 +35,13 @@ input {
   }
 
 #header {
-  padding: 10px;
+  padding: 15px 10px 5px 10px;
   font-family: 'Indie Flower', Sans-Serif;
   background-color: #668b66;
+  background-image: url('../img/logo.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 64px 64px;
   color: black;
   font-size: 4em;
   text-align: center;

@@ -20,30 +20,54 @@ namespace Ranked.Modules
           var match = this.TryBind<Models.Match>();
           if (match == null) return HttpStatusCode.UnprocessableEntity;
 
-          if (string.IsNullOrEmpty(match.Winner)) match.Winner = Context.CurrentUser.UserName; else match.Loser = Context.CurrentUser.UserName;
-          if (match.Winner == match.Loser) return HttpStatusCode.BadRequest;
-
+          // setup object
+          match.Winner = string.IsNullOrEmpty(match.Winner) ? Context.CurrentUser.UserName : match.Winner;
+          match.Loser = string.IsNullOrEmpty(match.Loser) ? Context.CurrentUser.UserName : match.Loser;
           match.IsWinnerConfirmed = match.Winner == Context.CurrentUser.UserName;
           match.IsLoserConfirmed = match.Loser == Context.CurrentUser.UserName;
           match.Date = DateTime.Now;
 
-          if (!conn.TryExecute(@"
-            
-            DECLARE @Id AS int
-            SELECT @Id = Id FROM Match WHERE (IsWinnerConfirmed = 0 OR IsLoserConfirmed = 0) AND ((Winner = @Winner AND Loser = @Loser) OR (Winner = @Loser AND Loser = @Winner))
-            IF @Id IS NULL INSERT INTO Match (Winner, Loser, Date, IsWinnerConfirmed, IsLoserConfirmed) VALUES (@Winner, @Loser, @Date, @IsWinnerConfirmed, @IsLoserConfirmed)
-            ELSE BEGIN
+          // sanity-check the code monkeys
+          if (match.Winner == match.Loser) return HttpStatusCode.BadRequest;
 
-	            DECLARE @CurrentWinner AS nvarchar(255)
-	            SELECT @CurrentWinner = Winner FROM Match WHERE Id = @Id
-	            IF @Winner = @CurrentWinner UPDATE Match SET IsWinnerConfirmed = (CASE WHEN IsWinnerConfirmed = 1 OR @IsWinnerConfirmed = 1 THEN 1 ELSE 0 END), IsLoserConfirmed = (CASE WHEN IsLoserConfirmed = 1 OR @IsLoserConfirmed = 1 THEN 1 ELSE 0 END) WHERE Id = @Id
-	            ELSE UPDATE Match SET Winner = @Winner, Loser = @Loser, IsWinnerConfirmed = @IsWinnerConfirmed, IsLoserConfirmed = @IsLoserConfirmed WHERE Id = @Id
+          // check if there is an existing proposal for this match
+          var existingMatch = conn.Query<Models.Match>(@"
+          
+            SELECT Id, Winner, Loser, Date, IsWinnerConfirmed, IsLoserConfirmed
+            FROM Match WHERE (IsWinnerConfirmed = 0 OR IsLoserConfirmed = 0) AND ((Winner = @Winner AND Loser = @Loser) OR (Winner = @Loser AND Loser = @Winner))
+          
+          ", new { match.Winner, match.Loser }).FirstOrDefault();
 
-            END
-            
-          ", new { match.Winner, match.Loser, match.IsWinnerConfirmed, match.IsLoserConfirmed, match.Date })) return HttpStatusCode.UnprocessableEntity;
+          // first proposal of this match, submit for review
+          if (existingMatch == null)
+          {
+            return conn.Query<Models.Match>(
+              "INSERT INTO Match (Winner, Loser, Date, IsWinnerConfirmed, IsLoserConfirmed) OUTPUT inserted.* VALUES (@Winner, @Loser, @Date, @IsWinnerConfirmed, @IsLoserConfirmed)",
+              new { match.Winner, match.Loser, match.Date, match.IsWinnerConfirmed, match.IsLoserConfirmed }).First();
+          }
 
-          return match;
+          // declined proposal, update for other review (ping-pong)
+          if (existingMatch.Winner != match.Winner)
+          {
+            return conn.Query<Models.Match>(
+              "UPDATE Match SET Winner = @Winner, Loser = @Loser, IsWinnerConfirmed = @IsWinnerConfirmed, IsLoserConfirmed = @IsLoserConfirmed OUTPUT inserted.* WHERE Id = @Id",
+              new { existingMatch.Id, match.Winner, match.Loser, match.IsWinnerConfirmed, match.IsLoserConfirmed }).First();
+          }
+
+          // same user updating same result - the user must want to delete it
+          if ((!existingMatch.IsWinnerConfirmed && !match.IsWinnerConfirmed) || (!existingMatch.IsLoserConfirmed && !match.IsLoserConfirmed))
+          {
+            conn.Execute("DELETE Match WHERE Id = @Id AND (IsWinnerConfirmed = 0 OR IsLoserConfirmed = 0)", new { Id = existingMatch.Id });
+            return existingMatch;
+          }
+
+          // update ELO
+          User.Score(conn, match.Winner, match.Loser);
+
+          // approved proposal
+          return conn.Query<Models.Match>(
+            "UPDATE Match SET IsWinnerConfirmed = @IsWinnerConfirmed, IsLoserConfirmed = @IsLoserConfirmed OUTPUT inserted.* WHERE Id = @Id",
+            new { existingMatch.Id, IsWinnerConfirmed = match.IsWinnerConfirmed || existingMatch.IsWinnerConfirmed, IsLoserConfirmed = match.IsLoserConfirmed || existingMatch.IsLoserConfirmed }).First();
         }
       };
 
@@ -53,17 +77,7 @@ namespace Ranked.Modules
 
         using (var conn = Database.Connect())
         {
-          return conn.Query(@"
-            
-            SELECT
-              Winner,
-              Loser,
-              Date
-            FROM Match
-            WHERE IsWinnerConfirmed = 1 AND IsLoserConfirmed = 1
-            ORDER BY Id DESC
-
-          ").ToList();
+          return conn.Query("SELECT Winner, Loser, Date FROM Match WHERE IsWinnerConfirmed = 1 AND IsLoserConfirmed = 1 ORDER BY Id DESC").ToList();
         }
       };
     }

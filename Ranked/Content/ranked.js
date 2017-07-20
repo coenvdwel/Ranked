@@ -75,7 +75,7 @@ var ranked = {
   },
 
   menu: () => {
-    $(`<div><a href="#" onclick="ranked.elements.menuElement.toggle('slow'); return false;"><img src='Content/img/menu.png' style="width: 32px; height: 32px; margin-bottom: -10px;" /></a></div>`).appendTo(ranked.elements.menu);
+    $(`<div><a href="#" onclick="ranked.elements.menuElement.toggle('slow'); return false;"><img src='Content/img/menu.png' style="width: 32px; height: 32px; margin-bottom: -10px; margin-left: -10px;" /></a></div>`).appendTo(ranked.elements.menu);
     ranked.elements.menuElement = $(`<div></div>`).hide().appendTo(ranked.elements.menu);
     ranked.elements.menuElement.append($(`<form onsubmit="ranked.password(); return false;"><label for="old">Password</label><input type="submit" value="Ok" /><div><input id="old" type="password" placeholder="Old" required /><input id="new" type="password" placeholder="New" required /></div></form>`));
     ranked.elements.menuElement.append($(`<form onsubmit="ranked.logout(); return false;" class="stretch"><div><input type="submit" value="Log out" /></div></form>`));
@@ -146,7 +146,7 @@ var ranked = {
 
     wrapper.append(div)
       .append($(`<span class="win">${value.wins}W.${value.losses}L</span>`))
-      .append($(`<span class="win">${value.score}</span>`));
+      .append($(`<span class="win">${value.rating}</span>`));
 
     swipe.initElements(div);
     wrapper.show();
