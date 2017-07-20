@@ -128,7 +128,7 @@ var ranked = {
 
   render: (value) => {
     var cls = "user";
-    if (value.me) cls += " me"; // it's you, just color for reference
+    if (value.me) cls += " me"; // it's you, just for reference
     if (value.pendingLoss || value.pendingWin) cls += " pending"; // you're waiting on the other guy to confirm
     if (value.confirmLoss || value.confirmWin) cls += " confirm"; // you need to confirm
 
@@ -138,9 +138,11 @@ var ranked = {
     var div = $(`<div class="${cls}">${value.id.slice(0, -13)}</div>`);
     var wrapper = $(`<div></div>`).hide().appendTo(ranked.elements.container);
 
-    if (!value.me) wrapper
-      .append($(`<a class="lose" href="#" onclick="ranked.match('${value.id}', ranked.results.lose); return false;">${lose}</a>`))
-      .append($(`<a class="win" href="#" onclick="ranked.match('${value.id}', ranked.results.win); return false;">${win}</a>`));
+    if (!value.me) {
+      wrapper
+        .append($(`<a class="lose" href="#" onclick="ranked.match('${value.id}', ranked.results.lose); return false;">${lose}</a>`))
+        .append($(`<a class="win" href="#" onclick="ranked.match('${value.id}', ranked.results.win); return false;">${win}</a>`));
+    }
 
     wrapper.append(div)
       .append($(`<span class="win">${value.wins}W.${value.losses}L</span>`))

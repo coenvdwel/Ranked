@@ -33,7 +33,7 @@ namespace Ranked.Utility
       {
         Id = id,
         User = user,
-        Expires = DateTimeOffset.UtcNow.AddHours(8)
+        Expires = DateTimeOffset.UtcNow.AddMonths(3)
       };
 
       _sessions.Add(session.Id, session.User, session.Expires);
