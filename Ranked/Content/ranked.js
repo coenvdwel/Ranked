@@ -75,7 +75,7 @@ var ranked = {
   },
 
   menu: () => {
-    $(`<div><a href="#" onclick="ranked.elements.menuElement.toggle('slow'); return false;">Menu</a></div>`).appendTo(ranked.elements.menu);
+    $(`<div><a href="#" onclick="ranked.elements.menuElement.toggle('slow'); return false;"><img src='Content/img/menu.png' style="width: 32px; height: 32px; margin-bottom: -10px;" /></a></div>`).appendTo(ranked.elements.menu);
     ranked.elements.menuElement = $(`<div></div>`).hide().appendTo(ranked.elements.menu);
     ranked.elements.menuElement.append($(`<form onsubmit="ranked.password(); return false;"><label for="old">Password</label><input type="submit" value="Ok" /><div><input id="old" type="password" placeholder="Old" required /><input id="new" type="password" placeholder="New" required /></div></form>`));
     ranked.elements.menuElement.append($(`<form onsubmit="ranked.logout(); return false;" class="stretch"><div><input type="submit" value="Log out" /></div></form>`));
@@ -136,10 +136,13 @@ var ranked = {
     var win = value.pendingWin ? 'Pending' : (value.confirmWin ? 'Confirm' : '');
 
     var div = $(`<div class="${cls}">${value.id.slice(0, -13)}</div>`);
-    var wrapper = $(`<div></div>`).hide().appendTo(ranked.elements.container)
+    var wrapper = $(`<div></div>`).hide().appendTo(ranked.elements.container);
+
+    if (!value.me) wrapper
       .append($(`<a class="lose" href="#" onclick="ranked.match('${value.id}', ranked.results.lose); return false;">${lose}</a>`))
-      .append($(`<a class="win" href="#" onclick="ranked.match('${value.id}', ranked.results.win); return false;">${win}</a>`))
-      .append(div)
+      .append($(`<a class="win" href="#" onclick="ranked.match('${value.id}', ranked.results.win); return false;">${win}</a>`));
+
+    wrapper.append(div)
       .append($(`<span class="win">${value.wins}W.${value.losses}L</span>`))
       .append($(`<span class="win">${value.score}</span>`));
 

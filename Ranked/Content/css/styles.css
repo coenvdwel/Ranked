@@ -50,7 +50,7 @@ input {
   }
 
 #menu > div {
-  padding: 10px 20px 10px 20px;
+  padding: 0 20px 0 20px;
   background-color: #2E2E2E;
   color: white;
   overflow: hidden;

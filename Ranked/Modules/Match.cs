@@ -21,6 +21,7 @@ namespace Ranked.Modules
           if (match == null) return HttpStatusCode.UnprocessableEntity;
 
           if (string.IsNullOrEmpty(match.Winner)) match.Winner = Context.CurrentUser.UserName; else match.Loser = Context.CurrentUser.UserName;
+          if (match.Winner == match.Loser) return HttpStatusCode.BadRequest;
 
           match.IsWinnerConfirmed = match.Winner == Context.CurrentUser.UserName;
           match.IsLoserConfirmed = match.Loser == Context.CurrentUser.UserName;
