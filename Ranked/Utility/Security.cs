@@ -24,7 +24,7 @@ namespace Ranked.Utility
       {
         using (var conn = Database.Connect())
         {
-          Session = conn.Query<Session>("SELECT s.Id, s.UserId, s.Expires FROM [Session] s WHERE GETDATE() < s.Expires", new { Id = sessionId }).FirstOrDefault();
+          Session = conn.Query<Session>("SELECT s.Id, s.UserId, s.Expires FROM [Session] s WHERE Id = @Id AND GETDATE() < s.Expires", new { Id = sessionId }).FirstOrDefault();
           UserName = Session?.UserId;
         }
       }
