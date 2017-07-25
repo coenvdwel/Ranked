@@ -33,7 +33,6 @@ var swipe =
         .siblings().css({ 'float': 'left', 'display': 'block', 'overflow': 'hidden', 'width': 0 });
     },
     start: (e) => {
-      e.preventDefault();
       var state = 0, target = $(e.target);
 
       if (swipe.session.swiping) return;

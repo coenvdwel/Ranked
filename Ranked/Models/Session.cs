@@ -5,7 +5,7 @@ namespace Ranked.Models
   public class Session
   {
     public string Id;
-    public string User;
-    public DateTimeOffset Expires;
+    public string UserId;
+    public DateTime Expires;
   }
 }

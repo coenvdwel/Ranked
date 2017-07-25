@@ -34,14 +34,15 @@ input {
     border: 4px solid #a3b9a3;
   }
 
+#main {
+  max-width: 800px;
+  margin: 0 auto 0 auto;
+}
+
 #header {
   padding: 15px 10px 5px 10px;
   font-family: 'Indie Flower', Sans-Serif;
   background-color: #668b66;
-  background-image: url('../img/logo.png');
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: 64px 64px;
   color: black;
   font-size: 4em;
   text-align: center;

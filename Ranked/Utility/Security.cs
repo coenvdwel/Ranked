@@ -1,6 +1,9 @@
-﻿using Nancy.Security;
+﻿using Dapper;
+using Nancy.Security;
+using Ranked.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Caching;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,41 +12,50 @@ namespace Ranked.Utility
 {
   public static class Security
   {
-    private static MemoryCache _sessions = new MemoryCache("Ranked_Sessions");
     private static MemoryCache _attempts = new MemoryCache("Ranked_Attempts");
 
     public class User : IUserIdentity
     {
-      public string SessionId { get; }
+      public Session Session { get; }
       public string UserName { get; }
       public IEnumerable<string> Claims { get; }
 
       public User(string sessionId)
       {
-        SessionId = sessionId;
-        UserName = _sessions.Get(sessionId) as string;
+        using (var conn = Database.Connect())
+        {
+          Session = conn.Query<Session>("SELECT s.Id, s.UserId, s.Expires FROM [Session] s WHERE GETDATE() < s.Expires", new { Id = sessionId }).FirstOrDefault();
+          UserName = Session?.UserId;
+        }
       }
     }
 
-    public static Models.Session Session(string user)
+    public static Session Session(string user)
     {
-      var id = Guid.NewGuid().ToString().Replace("-", "");
-
-      var session = new Models.Session
+      using (var conn = Database.Connect())
       {
-        Id = id,
-        User = user,
-        Expires = DateTimeOffset.UtcNow.AddMonths(3)
-      };
+        var id = Guid.NewGuid().ToString().Replace("-", "");
 
-      _sessions.Add(session.Id, session.User, session.Expires);
-      _attempts.Remove(session.User);
-      return session;
+        var session = new Session
+        {
+          Id = id,
+          UserId = user,
+          Expires = DateTime.UtcNow.AddMonths(3)
+        };
+
+        _attempts.Remove(session.UserId);
+
+        conn.Execute("INSERT INTO [Session] (Id, UserId, Expires) VALUES (@Id, @UserId, @Expires)", new { session.Id, session.UserId, session.Expires });
+        return session;
+      }
     }
 
     public static bool Logout(string sessionId)
     {
-      return _sessions.Remove(sessionId) != null;
+      using (var conn = Database.Connect())
+      {
+        return conn.Execute("DELETE [Session] WHERE Id = @Id", new { Id = sessionId }) > 0;
+      }
     }
 
     public static bool Limited(string user)
