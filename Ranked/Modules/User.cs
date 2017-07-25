@@ -21,9 +21,14 @@ namespace Ranked.Modules
       var winnerOdds = winnerRatingTransformed / (winnerRatingTransformed + loserRatingTransformed);
       var loserOdds = loserRatingTransformed / (winnerRatingTransformed + loserRatingTransformed);
 
+      var winnerDiff = (int)(K * (1 - winnerOdds));
+      var loserDiff = (int)(K * (0 - loserOdds));
+
+      Slack.SendMessage($"{winner} (+{winnerDiff}) [{winnerRating + winnerDiff}] just won from {loser} ({loserDiff}) [{loserRating + loserDiff}]!", "#ranked", ":ranked:", "Ranked");
+
       conn.Execute(
         @"UPDATE [User] SET Rating = @WinnerRating WHERE Id = @Winner; UPDATE [User] SET Rating = @LoserRating WHERE Id = @Loser",
-        new { Winner = winner, WinnerRating = winnerRating + (int)(K * (1 - winnerOdds)), Loser = loser, LoserRating = loserRating + (int)(K * (0 - loserOdds)) });
+        new { Winner = winner, WinnerRating = winnerRating + winnerDiff, Loser = loser, LoserRating = loserRating + loserDiff });
     }
 
     public User() : base("/users")
