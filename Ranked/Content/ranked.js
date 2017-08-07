@@ -94,7 +94,7 @@ var ranked = {
 
   login: () => {
     ranked.json('/sessions', {
-      type: 'post', value: { id: $('#id').val(), password: $('#password').val() }, success: (r) => { Cookies.set(ranked.session, r.id, { expires: 1 / 3 }); ranked.init(); }
+      type: 'post', value: { id: $('#id').val(), password: $('#password').val() }, success: (r) => { Cookies.set(ranked.session, r.id, { expires: 90 }); ranked.init(); }
     });
   },
 
