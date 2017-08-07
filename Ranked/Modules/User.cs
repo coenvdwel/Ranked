@@ -15,20 +15,14 @@ namespace Ranked.Modules
 
       var winnerRating = conn.Query<int>("SELECT Rating FROM [User] WHERE Id = @Winner", new { Winner = winner }).First();
       var loserRating = conn.Query<int>("SELECT Rating FROM [User] WHERE Id = @Loser", new { Loser = loser }).First();
-      double winnerRatingTransformed = 10 ^ (winnerRating / 400);
-      double loserRatingTransformed = 10 ^ (loserRating / 400);
+      var odds = (10 ^ (winnerRating / 400)) / (((double)(10 ^ (winnerRating / 400))) + (10 ^ (loserRating / 400)));
+      var diff = (int)(K * (1 - odds));
 
-      var winnerOdds = winnerRatingTransformed / (winnerRatingTransformed + loserRatingTransformed);
-      var loserOdds = loserRatingTransformed / (winnerRatingTransformed + loserRatingTransformed);
-
-      var winnerDiff = (int)(K * (1 - winnerOdds));
-      var loserDiff = (int)(K * (0 - loserOdds));
-
-      Slack.SendMessage($"{winner} (+{winnerDiff}) [{winnerRating + winnerDiff}] just won from {loser} ({loserDiff}) [{loserRating + loserDiff}]!", "#ranked", ":ranked:", "Ranked");
+      Slack.SendMessage($"{winner} (+{diff}) [{winnerRating + diff}] just won from {loser} (-{diff}) [{loserRating - diff}]!", "#ranked", ":ranked:", "Ranked");
 
       conn.Execute(
         @"UPDATE [User] SET Rating = @WinnerRating WHERE Id = @Winner; UPDATE [User] SET Rating = @LoserRating WHERE Id = @Loser",
-        new { Winner = winner, WinnerRating = winnerRating + winnerDiff, Loser = loser, LoserRating = loserRating + loserDiff });
+        new { Winner = winner, WinnerRating = winnerRating + diff, Loser = loser, LoserRating = loserRating - diff });
     }
 
     public User() : base("/users")
