@@ -131,9 +131,10 @@ var ranked = {
     if (value.me) cls += " me"; // it's you, just for reference
     if (value.pendingLoss || value.pendingWin) cls += " pending"; // you're waiting on the other guy to confirm
     if (value.confirmLoss || value.confirmWin) cls += " confirm"; // you need to confirm
+    if (value.provisional) cls += " provisional"; // provisional player
 
-    var lose = value.pendingLoss ? 'Pending' : (value.confirmLoss ? 'Confirm' : '');
-    var win = value.pendingWin ? 'Pending' : (value.confirmWin ? 'Confirm' : '');
+    var lose = value.pendingLoss ? 'Pending' : (value.confirmLoss ? 'Confirm' : 'Lose');
+    var win = value.pendingWin ? 'Pending' : (value.confirmWin ? 'Confirm' : 'Win');
 
     var div = $(`<div class="${cls}">${value.id.slice(0, -13)}</div>`);
     var wrapper = $(`<div></div>`).hide().appendTo(ranked.elements.container);

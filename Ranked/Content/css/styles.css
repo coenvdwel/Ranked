@@ -213,6 +213,10 @@ input {
     text-decoration: underline;
   }
 
+  #container .provisional {
+    background-color: #575c40 !important;
+  }
+
   #container .pending {
     background-image: url('../img/pending.png');
     background-repeat: no-repeat;
