@@ -74,7 +74,7 @@ namespace Ranked.Modules
               LEFT OUTER JOIN Match sm ON (sm.Winner = @Id AND sm.Loser = u.Id AND sm.IsWinnerConfirmed = 0) OR (sm.Winner = u.Id AND sm.Loser = @Id AND sm.IsLoserConfirmed = 0)
               LEFT OUTER JOIN Match om ON (om.Winner = @Id AND om.Loser = u.Id AND om.IsLoserConfirmed = 0) OR (om.Winner = u.Id AND om.Loser = @Id AND om.IsWinnerConfirmed = 0)
             ) q
-            ORDER BY q.Provisional DESC, q.Rating DESC
+            ORDER BY q.Provisional ASC, q.Rating DESC
             
           ", new { Id = Context.CurrentUser.UserName }).ToList();
         }
